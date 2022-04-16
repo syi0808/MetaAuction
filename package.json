@@ -14,5 +14,8 @@
     "staticPath": [
       "./src/assets"
     ]
+  },
+  "scripts": {
+    "start": "parcel index.html"
   }
 }

@@ -39,11 +39,13 @@ export class Model {
             new THREE.BoxGeometry(...size),
             new THREE.MeshToonMaterial({ color })
         );
+
         mesh.position.copy(new Vector3(...position));
         mesh.rotation.x = Math.PI / 180 * degree[0];
         mesh.rotation.y = Math.PI / 180 * degree[1];
         mesh.rotation.z = Math.PI / 180 * degree[2];
         mesh.userData.type = ShapeType.Box;
+
         return mesh;
     }
 }

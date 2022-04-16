@@ -57549,9 +57549,9 @@ var Entity = /*#__PURE__*/function () {
   _createClass(Entity, [{
     key: "init",
     value: function init() {
-      this.three.castShadow = true;
       this.three.traverse(function (child) {
         child.castShadow = true;
+        child.receiveShadow = true;
       });
     }
   }, {
@@ -57574,7 +57574,10 @@ var Entity = /*#__PURE__*/function () {
         this.three.updateMatrix();
       }
 
-      if (this.cannon.position.y < -10) this.cannon.position.set(0, 3, 0);
+      if (this.cannon.position.y < -10) {
+        this.cannon.position.set(0, 3, 0);
+        this.cannon.velocity.setZero();
+      }
     }
   }]);
 
@@ -57919,8 +57922,9 @@ var State = /*#__PURE__*/function () {
         nextAction.setEffectiveTimeScale(1);
         nextAction.setEffectiveWeight(1);
         nextAction.crossFadeFrom(prevAction, .5, true);
-        nextAction.play();
-      } else nextAction.play();
+      }
+
+      nextAction.play();
     }
   }, {
     key: "animate",
@@ -57969,7 +57973,7 @@ var ForwardState = /*#__PURE__*/function (_State2) {
   _createClass(ForwardState, [{
     key: "animate",
     value: function animate(keys) {
-      if (!keys.forward) this.setState("idle");else if (keys.backward) this.setState("backward");else if (keys.left) this.setState("left");else if (keys.right) this.setState("right");
+      if (keys.backward) this.setState("backward");else if (keys.left) this.setState("left");else if (keys.right) this.setState("right");else if (!keys.forward) this.setState("idle");
     }
   }]);
 
@@ -57992,7 +57996,7 @@ var BackwardState = /*#__PURE__*/function (_State3) {
   _createClass(BackwardState, [{
     key: "animate",
     value: function animate(keys) {
-      if (!keys.backward) this.setState("idle");else if (keys.forward) this.setState("forward");else if (keys.left) this.setState("left");else if (keys.right) this.setState("right");
+      if (keys.forward) this.setState("forward");else if (keys.left) this.setState("left");else if (keys.right) this.setState("right");else if (!keys.backward) this.setState("idle");
     }
   }]);
 
@@ -58015,7 +58019,7 @@ var LeftState = /*#__PURE__*/function (_State4) {
   _createClass(LeftState, [{
     key: "animate",
     value: function animate(keys) {
-      if (!keys.left) this.setState("idle");else if (keys.forward) this.setState("forward");else if (keys.backward) this.setState("backward");else if (keys.right) this.setState("right");
+      if (keys.forward) this.setState("forward");else if (keys.backward) this.setState("backward");else if (keys.right) this.setState("right");else if (!keys.left) this.setState("idle");
     }
   }]);
 
@@ -58038,7 +58042,7 @@ var RightState = /*#__PURE__*/function (_State5) {
   _createClass(RightState, [{
     key: "animate",
     value: function animate(keys) {
-      if (!keys.right) this.setState("idle");else if (keys.forward) this.setState("forward");else if (keys.backward) this.setState("backward");else if (keys.left) this.setState("left");
+      if (keys.forward) this.setState("forward");else if (keys.backward) this.setState("backward");else if (keys.left) this.setState("left");else if (!keys.right) this.setState("idle");
     }
   }]);
 
@@ -58157,10 +58161,16 @@ var AnimationManager = /*#__PURE__*/function () {
     this.mixer = new THREE.AnimationMixer(character.three);
     this.loadManager = new loadManager_1.LoadManager();
     this.animations = {};
-    this.init();
   }
 
   _createClass(AnimationManager, [{
+    key: "setCharacter",
+    value: function setCharacter(character) {
+      this.character = character;
+      this.mixer = new THREE.AnimationMixer(character.three);
+      this.init();
+    }
+  }, {
     key: "init",
     value: function init() {
       return __awaiter(this, void 0, void 0, /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
@@ -58194,12 +58204,8 @@ var AnimationManager = /*#__PURE__*/function () {
     key: "setState",
     value: function setState(name) {
       var prevState = this.currentState;
-
-      if (prevState) {
-        if (prevState.name === name) return;
-      }
-
-      var nextState = new States[name](this.animations, this.setState);
+      if (prevState && prevState.name === name) return;
+      var nextState = new States[name](this.animations, this.setState.bind(this));
       this.currentState = nextState;
       nextState.enter(prevState);
     }
@@ -58214,9 +58220,9 @@ var AnimationManager = /*#__PURE__*/function () {
     }
   }, {
     key: "animate",
-    value: function animate() {
-      if (!this.currentState) return;
-      this.currentState.animate(this.keyboardManager.keys);
+    value: function animate(delta) {
+      this.mixer.update(delta);
+      if (this.currentState) this.currentState.animate(this.keyboardManager.keys);
     }
   }]);
 
@@ -58322,6 +58328,7 @@ var PlayerManager = /*#__PURE__*/function () {
     key: "setCharacter",
     value: function setCharacter(character) {
       this.character = character;
+      this.animationManager.setCharacter(character);
       this.init();
     }
   }, {
@@ -58352,7 +58359,6 @@ var PlayerManager = /*#__PURE__*/function () {
   }, {
     key: "animate",
     value: function animate(delta, angleX) {
-      this.animationManager.animate();
       this.character.cannon.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 1), 0);
       var quatByAngleX = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 180 * -angleX);
       this.character.cannon.quaternion.copy(utils_1.Utils.tToC().quaternion(quatByAngleX));
@@ -58812,16 +58818,36 @@ var MapModel = /*#__PURE__*/function (_$Model) {
     key: "init",
     value: function init() {
       // Floor
-      this.group.add(this.createFloor());
-      this.group.traverse(function (child) {
-        child.receiveShadow = true;
-      });
+      this.group.add(this.createFloor()); // Wall
+
+      this.group.add(this.createWallVertical(15));
+      this.group.add(this.createWallVertical(-15));
+      this.group.add(this.createWallHorizontal(15));
+      this.group.add(this.createWallHorizontal(-15));
     }
   }, {
     key: "createFloor",
     value: function createFloor() {
       return this.createBox({
-        size: [10, .4, 10],
+        size: [30, .4, 30],
+        color: this.color
+      });
+    }
+  }, {
+    key: "createWallVertical",
+    value: function createWallVertical(z) {
+      return this.createBox({
+        size: [30, 40, .4],
+        position: [0, 0, z],
+        color: this.color
+      });
+    }
+  }, {
+    key: "createWallHorizontal",
+    value: function createWallHorizontal(x) {
+      return this.createBox({
+        size: [.4, 40, 30],
+        position: [x, 0, 0],
         color: this.color
       });
     }
@@ -58910,8 +58936,12 @@ var MapManager = /*#__PURE__*/function () {
     key: "settingLight",
     value: function settingLight() {
       var light = new THREE.DirectionalLight(0x444444);
-      light.position.set(0, 20, 10);
+      light.position.set(0, 50, 20);
       light.castShadow = true;
+      light.shadow.camera = new THREE.OrthographicCamera(-30, 30, 30, -30, 0.5, 1000);
+      light.shadow.bias = .0001;
+      light.shadowMapWidth = 4096;
+      light.shadowMapHeight = 4096;
       var ambient = new THREE.AmbientLight(0xbbbbbb);
       this.scene.add(ambient);
       this.scene.add(light);
@@ -59796,6 +59826,9 @@ var Main = /*#__PURE__*/function () {
         isModel: true
       }));
     });
+    this.loadManager.addEventListener("load", function () {
+      console.log("asd");
+    });
     this.init();
   }
 
@@ -59825,6 +59858,7 @@ var Main = /*#__PURE__*/function () {
       this.renderer.render(this.scene, this.camera);
       this.entityManager.animate();
       this.physicsManager.animate(delta);
+      this.playerManager.animationManager.animate(delta);
 
       if (this.mouseManager.isLocked) {
         this.cameraManager.animate(this.mouseManager.getAngleY());
@@ -59836,11 +59870,12 @@ var Main = /*#__PURE__*/function () {
   }]);
 
   return Main;
-}(); //@ts-ignore
+}(); // For Debuging
+//@ts-ignore
 
 
 window.m = new Main();
-},{"three":"node_modules/three/build/three.module.js","cannon-es":"node_modules/cannon-es/dist/cannon-es.js","./helper":"src/helper/index.ts","./libs/paths":"src/libs/paths/index.ts","./loadManager":"src/loadManager.ts","./physcisManager":"src/physcisManager.ts","./entityManager":"src/entityManager/index.ts","three-to-cannon":"node_modules/three-to-cannon/dist/three-to-cannon.modern.js","./playerManager":"src/playerManager.ts","./modelManager/chair":"src/modelManager/chair.ts","./mouseManager":"src/mouseManager.ts","./cameraManager":"src/cameraManager.ts","./entityManager/entity":"src/entityManager/entity.ts","./mapManager":"src/mapManager.ts","regenerator-runtime/runtime":"node_modules/regenerator-runtime/runtime.js"}],"C:/Users/Zenbook/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"three":"node_modules/three/build/three.module.js","cannon-es":"node_modules/cannon-es/dist/cannon-es.js","./helper":"src/helper/index.ts","./libs/paths":"src/libs/paths/index.ts","./loadManager":"src/loadManager.ts","./physcisManager":"src/physcisManager.ts","./entityManager":"src/entityManager/index.ts","three-to-cannon":"node_modules/three-to-cannon/dist/three-to-cannon.modern.js","./playerManager":"src/playerManager.ts","./modelManager/chair":"src/modelManager/chair.ts","./mouseManager":"src/mouseManager.ts","./cameraManager":"src/cameraManager.ts","./entityManager/entity":"src/entityManager/entity.ts","./mapManager":"src/mapManager.ts","regenerator-runtime/runtime":"node_modules/regenerator-runtime/runtime.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -59868,7 +59903,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57281" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "64764" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -60044,5 +60079,5 @@ function hmrAcceptRun(bundle, id) {
     return true;
   }
 }
-},{}]},{},["C:/Users/Zenbook/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","src/index.ts"], null)
+},{}]},{},["node_modules/parcel-bundler/src/builtins/hmr-runtime.js","src/index.ts"], null)
 //# sourceMappingURL=/src.f10117fe.js.map

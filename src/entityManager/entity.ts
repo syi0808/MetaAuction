@@ -18,10 +18,9 @@ export class Entity {
     }
 
     init() {
-        this.three.castShadow = true;
-        
         this.three.traverse(child => {
             child.castShadow = true;
+            child.receiveShadow = true;
         });
     }
 
@@ -42,6 +41,9 @@ export class Entity {
             this.three.updateMatrix();
         }
 
-        if(this.cannon.position.y < -10) this.cannon.position.set(0, 3, 0);
+        if(this.cannon.position.y < -10) {
+            this.cannon.position.set(0, 3, 0);
+            this.cannon.velocity.setZero();
+        }
     }
 }

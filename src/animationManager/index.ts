@@ -10,7 +10,7 @@ import {
     IdleState, 
     LeftState, 
     RightState, 
-    State 
+    State
 } from './state';
 
 const States = {
@@ -42,7 +42,11 @@ export class AnimationManager {
         this.mixer = new THREE.AnimationMixer(character.three);
         this.loadManager = new LoadManager();
         this.animations = {};
+    }
 
+    setCharacter(character: Entity) {
+        this.character = character;
+        this.mixer = new THREE.AnimationMixer(character.three);
         this.init();
     }
 
@@ -69,11 +73,9 @@ export class AnimationManager {
     setState(name: string) {
         const prevState = this.currentState;
 
-        if(prevState) {
-            if(prevState.name === name) return;
-        }
+        if(prevState && prevState.name === name) return;
 
-        const nextState = new States[name as keyof typeof States](this.animations, this.setState);
+        const nextState = new States[name as keyof typeof States](this.animations, this.setState.bind(this));
 
         this.currentState = nextState;
         nextState.enter(prevState);
@@ -88,8 +90,8 @@ export class AnimationManager {
         };
     }
 
-    animate() {
-        if(!this.currentState) return;
-        this.currentState.animate(this.keyboardManager.keys);
+    animate(delta: number) {
+        this.mixer.update(delta);
+        if(this.currentState) this.currentState.animate(this.keyboardManager.keys);
     }
 }

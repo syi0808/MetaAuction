@@ -25,9 +25,9 @@ export class State {
             nextAction.setEffectiveTimeScale(1);
             nextAction.setEffectiveWeight(1);
             nextAction.crossFadeFrom(prevAction, .5, true);
+        }
 
-            nextAction.play();
-        } else nextAction.play();
+        nextAction.play();
     }
 
     animate(keys: Keys) {
@@ -54,10 +54,10 @@ export class ForwardState extends State {
     }
 
     animate(keys: Keys) {
-        if(!keys.forward) this.setState("idle");
-        else if(keys.backward) this.setState("backward");
+        if(keys.backward) this.setState("backward");
         else if(keys.left) this.setState("left");
         else if(keys.right) this.setState("right");
+        else if(!keys.forward) this.setState("idle");
     }
 }
 
@@ -67,10 +67,10 @@ export class BackwardState extends State {
     }
 
     animate(keys: Keys) {
-        if(!keys.backward) this.setState("idle");
-        else if(keys.forward) this.setState("forward");
+        if(keys.forward) this.setState("forward");
         else if(keys.left) this.setState("left");
         else if(keys.right) this.setState("right");
+        else if(!keys.backward) this.setState("idle");
     }
 }
 
@@ -80,10 +80,10 @@ export class LeftState extends State {
     }
 
     animate(keys: Keys) {
-        if(!keys.left) this.setState("idle");
-        else if(keys.forward) this.setState("forward");
+        if(keys.forward) this.setState("forward");
         else if(keys.backward) this.setState("backward");
         else if(keys.right) this.setState("right");
+        else if(!keys.left) this.setState("idle");
     }
 }
 
@@ -93,9 +93,9 @@ export class RightState extends State {
     }
 
     animate(keys: Keys) {
-        if(!keys.right) this.setState("idle");
-        else if(keys.forward) this.setState("forward");
+        if(keys.forward) this.setState("forward");
         else if(keys.backward) this.setState("backward");
         else if(keys.left) this.setState("left");
+        else if(!keys.right) this.setState("idle");
     }
 }

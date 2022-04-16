@@ -47,6 +47,7 @@ export class PlayerManager {
 
     setCharacter(character: Entity) {
         this.character = character;
+        this.animationManager.setCharacter(character);
         this.init();
     }
 
@@ -73,8 +74,6 @@ export class PlayerManager {
     }
 
     animate(delta: number, angleX: number) {
-        this.animationManager.animate();
-
         this.character.cannon.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 1), 0);
 
         const quatByAngleX = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), (Math.PI / 180 * -angleX));

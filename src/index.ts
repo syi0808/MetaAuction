@@ -63,6 +63,10 @@ class Main {
                 character.scale.setScalar(.01);
                 this.playerManager.setCharacter(this.entityManager.addCustom(character, { mass: 10, size: [.4, 1.77, .28], position: [0, 5, 0], isModel: true }));
             });
+        
+        this.loadManager.addEventListener("load", () => {
+            console.log("Success Loaded !");
+        });
 
         this.init();
     }
@@ -86,6 +90,7 @@ class Main {
 
         this.entityManager.animate();
         this.physicsManager.animate(delta);
+        this.playerManager.animationManager.animate(delta);
 
         if(this.mouseManager.isLocked) {
             this.cameraManager.animate(this.mouseManager.getAngleY());
@@ -96,5 +101,6 @@ class Main {
     }
 }
 
+// For Debuging
 //@ts-ignore
 window.m = new Main();
