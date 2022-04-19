@@ -13,6 +13,7 @@ import { MouseManager } from './mouseManager';
 import { CameraManager } from './cameraManager';
 import { Entity } from './entityManager/entity';
 import { MapManager } from './mapManager';
+import { ShaderManager } from './shaderManager';
 import 'regenerator-runtime/runtime';
 
 class Main {
@@ -26,6 +27,7 @@ class Main {
     cameraManager: CameraManager;
     playerManager: PlayerManager;
     mapManager: MapManager;
+    shaderManager: ShaderManager;
     clock: THREE.Clock;
     lastTime: number;
 
@@ -55,6 +57,7 @@ class Main {
         this.entityManager = new EntityManager(this.scene, this.physicsManager.world);
         this.cameraManager = new CameraManager(this.camera, this.playerManager);
         this.mapManager = new MapManager(this.scene, this.entityManager);
+        this.shaderManager = new ShaderManager(this.renderer, this.scene, this.camera);
 
         this.loadManager
             .load([Paths.character])
@@ -75,6 +78,10 @@ class Main {
         new Helper(this.scene);
         this.renderer.shadowMap.enabled = true;
 
+        // this.renderer.physicallyCorrectLights = true;
+        // this.renderer.outputEncoding = THREE.sRGBEncoding;
+        // this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
         this.entityManager.addModel(new ChairModel(), { mass: 0, position: [0, 1, 0] });
         this.entityManager.addObject3D(new THREE.Mesh(new THREE.SphereGeometry(.2), new THREE.MeshToonMaterial()), { mass: .5, type: ShapeType.SPHERE }).cannon.position.y = 3;
 
@@ -86,7 +93,27 @@ class Main {
         const delta = currentTime - this.lastTime;
         this.lastTime = currentTime;
 
-        this.renderer.render(this.scene, this.camera);
+        const materials: { [key: string]: any } = {};
+
+        // this.renderer.render(this.scene, this.camera);
+        
+        this.scene.traverse(obj => {
+            if(this.shaderManager.layer.test(obj.layers) === false) {
+                //@ts-ignore
+                materials[obj.uuid] = obj.material;
+                //@ts-ignore
+                obj.material = new THREE.MeshBasicMaterial({ color: "black" });
+            }
+        });
+        this.shaderManager.bloomComposer.render();
+        this.scene.traverse(obj => {
+            if(materials[obj.uuid]) {
+                //@ts-ignore
+                obj.material = materials[obj.uuid];
+                delete materials[obj.uuid];
+            }
+        });
+        this.shaderManager.finalComposer.render();
 
         this.entityManager.animate();
         this.physicsManager.animate(delta);

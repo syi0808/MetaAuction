@@ -33,6 +33,6 @@ export class MapManager {
         
         const ambient = new THREE.AmbientLight(0xbbbbbb);
         this.scene.add(ambient);
-        this.scene.add(light); 
+        this.scene.add(light);
     }
 }

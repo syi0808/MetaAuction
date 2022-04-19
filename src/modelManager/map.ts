@@ -19,6 +19,17 @@ export class MapModel extends Model {
         this.group.add(this.createWallVertical(-15));
         this.group.add(this.createWallHorizontal(15));
         this.group.add(this.createWallHorizontal(-15));
+
+        // Ceil
+        // this.group.add(this.createCeil());
+    }
+
+    createCeil() {
+        return this.createBox({
+            size: [30, .4, 30],
+            color: this.color,
+            position: [0, 20, 0],
+        })
     }
 
     createFloor() {
@@ -30,16 +41,16 @@ export class MapModel extends Model {
 
     createWallVertical(z: number) {
         return this.createBox({
-            size: [30, 40, .4],
-            position: [0, 0, z],
+            size: [30, 20, .4],
+            position: [0, 10, z],
             color: this.color,
         });
     }
 
     createWallHorizontal(x: number) {
         return this.createBox({
-            size: [.4, 40, 30],
-            position: [x, 0, 0],
+            size: [.4, 20, 30],
+            position: [x, 10, 0],
             color: this.color,
         });
     }
