@@ -58819,11 +58819,11 @@ var MapModel = /*#__PURE__*/function (_$Model) {
     value: function init() {
       // Floor
       this.group.add(this.createFloor()); // Wall
-
-      this.group.add(this.createWallVertical(15));
-      this.group.add(this.createWallVertical(-15));
-      this.group.add(this.createWallHorizontal(15));
-      this.group.add(this.createWallHorizontal(-15)); // Ceil
+      // this.group.add(this.createWallVertical(15));
+      // this.group.add(this.createWallVertical(-15));
+      // this.group.add(this.createWallHorizontal(15));
+      // this.group.add(this.createWallHorizontal(-15));
+      // Ceil
       // this.group.add(this.createCeil());
     }
   }, {
@@ -58867,7 +58867,11 @@ var MapModel = /*#__PURE__*/function (_$Model) {
 }(_1.Model);
 
 exports.MapModel = MapModel;
-},{".":"src/modelManager/index.ts"}],"src/mapManager.ts":[function(require,module,exports) {
+},{".":"src/modelManager/index.ts"}],"src/libs/shaders/sky/vertex.glsl":[function(require,module,exports) {
+module.exports = "#define GLSLIFY 1\nvarying vec3 vWorldPosition;\n\nvoid main() {\n    vec4 worldPosition = modelMatrix * vec4( position, 1.0 );\n    vWorldPosition = worldPosition.xyz;\n\n    gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n}";
+},{}],"src/libs/shaders/sky/fragment.glsl":[function(require,module,exports) {
+module.exports = "#define GLSLIFY 1\nuniform vec3 topColor;\nuniform vec3 bottomColor;\nuniform float offset;\nuniform float exponent;\n\nvarying vec3 vWorldPosition;\n\nvoid main() {\n    float h = normalize( vWorldPosition + offset ).y;\n    gl_FragColor = vec4( mix( bottomColor, topColor, max( pow( max( h , 0.0), exponent ), 0.0 ) ), 1.0 );\n}";
+},{}],"src/mapManager.ts":[function(require,module,exports) {
 "use strict";
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -58916,6 +58920,12 @@ var __importStar = this && this.__importStar || function (mod) {
   return result;
 };
 
+var __importDefault = this && this.__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
@@ -58924,6 +58934,10 @@ exports.MapManager = void 0;
 var THREE = __importStar(require("three"));
 
 var map_1 = require("./modelManager/map");
+
+var vertex_glsl_1 = __importDefault(require("./libs/shaders/sky/vertex.glsl"));
+
+var fragment_glsl_1 = __importDefault(require("./libs/shaders/sky/fragment.glsl"));
 
 var MapManager = /*#__PURE__*/function () {
   function MapManager(scene, entityManager) {
@@ -58941,20 +58955,55 @@ var MapManager = /*#__PURE__*/function () {
         mass: 0
       });
       this.settingLight();
+      this.settingSky();
     }
   }, {
     key: "settingLight",
     value: function settingLight() {
-      var light = new THREE.DirectionalLight(0x444444);
+      var light = new THREE.DirectionalLight(0xdddddd);
       light.position.set(0, 50, 20);
       light.castShadow = true;
       light.shadow.camera = new THREE.OrthographicCamera(-30, 30, 30, -30, 0.5, 1000);
       light.shadow.bias = .0001;
       light.shadowMapWidth = 4096;
       light.shadowMapHeight = 4096;
-      var ambient = new THREE.AmbientLight(0xbbbbbb);
+      var ambient = new THREE.AmbientLight(0xffffff, 1.5);
       this.scene.add(ambient);
       this.scene.add(light);
+    }
+  }, {
+    key: "settingSky",
+    value: function settingSky() {
+      var light = new THREE.HemisphereLight(0xffffff, 0xffffff, .8);
+      light.color.setHSL(.6, 1, .6);
+      light.groundColor.setHSL(.095, 1, .75);
+      light.position.set(0, 50, 0);
+      light.visible = true;
+      var uniforms = {
+        topColor: {
+          value: new THREE.Color(0x0077ff)
+        },
+        bottomColor: {
+          value: new THREE.Color(0xffffff)
+        },
+        offset: {
+          value: 33
+        },
+        exponent: {
+          value: 0.6
+        }
+      };
+      uniforms.topColor.value.copy(light.color);
+      this.scene.background = new THREE.Color(0, 0, 0);
+      this.scene.fog = new THREE.Fog(this.scene.background, 1, 800);
+      this.scene.fog.color.copy(uniforms.bottomColor.value);
+      var skyMesh = new THREE.Mesh(new THREE.SphereGeometry(800, 32, 15), new THREE.ShaderMaterial({
+        vertexShader: vertex_glsl_1.default,
+        fragmentShader: fragment_glsl_1.default,
+        side: THREE.BackSide,
+        uniforms: uniforms
+      }));
+      this.scene.add(skyMesh);
     }
   }]);
 
@@ -58962,7 +59011,7 @@ var MapManager = /*#__PURE__*/function () {
 }();
 
 exports.MapManager = MapManager;
-},{"three":"node_modules/three/build/three.module.js","./modelManager/map":"src/modelManager/map.ts"}],"node_modules/three/examples/jsm/shaders/CopyShader.js":[function(require,module,exports) {
+},{"three":"node_modules/three/build/three.module.js","./modelManager/map":"src/modelManager/map.ts","./libs/shaders/sky/vertex.glsl":"src/libs/shaders/sky/vertex.glsl","./libs/shaders/sky/fragment.glsl":"src/libs/shaders/sky/fragment.glsl"}],"node_modules/three/examples/jsm/shaders/CopyShader.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -60027,7 +60076,7 @@ var ShaderManager = /*#__PURE__*/_createClass(function ShaderManager(renderer, s
   this.layer = new THREE.Layers();
   this.layer.set(Layer.BLOOM_EFFECT);
   var renderScene = new RenderPass_1.RenderPass(this.scene, this.camera);
-  var bloomPass = new UnrealBloomPass_1.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 5, 0, 0);
+  var bloomPass = new UnrealBloomPass_1.UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1, 0, 0);
   var bloomComposer = new EffectComposer_1.EffectComposer(this.renderer);
   bloomComposer.renderToScreen = false;
   bloomComposer.addPass(renderScene);
@@ -60810,7 +60859,136 @@ try {
   }
 }
 
-},{}],"src/index.ts":[function(require,module,exports) {
+},{}],"src/modelManager/led.ts":[function(require,module,exports) {
+"use strict";
+
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  var desc = Object.getOwnPropertyDescriptor(m, k);
+
+  if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+    desc = {
+      enumerable: true,
+      get: function get() {
+        return m[k];
+      }
+    };
+  }
+
+  Object.defineProperty(o, k2, desc);
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = this && this.__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = this && this.__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) {
+    if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+  }
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.LedModel = void 0;
+
+var _1 = require(".");
+
+var shaderManager_1 = require("../shaderManager");
+
+var THREE = __importStar(require("three"));
+
+var LedModel = /*#__PURE__*/function (_$Model) {
+  _inherits(LedModel, _$Model);
+
+  var _super = _createSuper(LedModel);
+
+  function LedModel(width, height) {
+    var _this;
+
+    _classCallCheck(this, LedModel);
+
+    _this = _super.call(this);
+    _this.color = 0xffffff;
+    _this.width = width;
+    _this.height = height;
+
+    _this.init();
+
+    return _this;
+  }
+
+  _createClass(LedModel, [{
+    key: "init",
+    value: function init() {
+      // Light
+      this.group.add(this.createLight()); // Grow Box
+
+      this.group.add(this.createGrowBox());
+    }
+  }, {
+    key: "createLight",
+    value: function createLight() {
+      var width = this.width,
+          height = this.height;
+      return new THREE.RectAreaLight(this.color, 1, width, height);
+    }
+  }, {
+    key: "createGrowBox",
+    value: function createGrowBox() {
+      var width = this.width,
+          height = this.height,
+          color = this.color;
+      var mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({
+        color: color
+      }));
+      mesh.layers.enable(shaderManager_1.Layer.BLOOM_EFFECT);
+      return mesh;
+    }
+  }]);
+
+  return LedModel;
+}(_1.Model);
+
+exports.LedModel = LedModel;
+},{".":"src/modelManager/index.ts","../shaderManager":"src/shaderManager/index.ts","three":"node_modules/three/build/three.module.js"}],"src/index.ts":[function(require,module,exports) {
 "use strict";
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -60895,6 +61073,8 @@ var shaderManager_1 = require("./shaderManager");
 
 require("regenerator-runtime/runtime");
 
+var led_1 = require("./modelManager/led");
+
 var Main = /*#__PURE__*/function () {
   function Main() {
     var _this = this;
@@ -60940,10 +61120,12 @@ var Main = /*#__PURE__*/function () {
     key: "init",
     value: function init() {
       new helper_1.Helper(this.scene);
-      this.renderer.shadowMap.enabled = true; // this.renderer.physicallyCorrectLights = true;
-      // this.renderer.outputEncoding = THREE.sRGBEncoding;
-      // this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-
+      this.renderer.shadowMap.enabled = true;
+      this.renderer.setClearColor(0x000000, 1);
+      this.renderer.autoClear = false;
+      this.renderer.outputEncoding = THREE.sRGBEncoding;
+      this.renderer.physicallyCorrectLights = true;
+      this.scene.add(new led_1.LedModel(1.3, 2).group);
       this.entityManager.addModel(new chair_1.ChairModel(), {
         mass: 0,
         position: [0, 1, 0]
@@ -61004,7 +61186,7 @@ var Main = /*#__PURE__*/function () {
 
 
 window.m = new Main();
-},{"three":"node_modules/three/build/three.module.js","cannon-es":"node_modules/cannon-es/dist/cannon-es.js","./helper":"src/helper/index.ts","./libs/paths":"src/libs/paths/index.ts","./loadManager":"src/loadManager.ts","./physcisManager":"src/physcisManager.ts","./entityManager":"src/entityManager/index.ts","three-to-cannon":"node_modules/three-to-cannon/dist/three-to-cannon.modern.js","./playerManager":"src/playerManager.ts","./modelManager/chair":"src/modelManager/chair.ts","./mouseManager":"src/mouseManager.ts","./cameraManager":"src/cameraManager.ts","./entityManager/entity":"src/entityManager/entity.ts","./mapManager":"src/mapManager.ts","./shaderManager":"src/shaderManager/index.ts","regenerator-runtime/runtime":"node_modules/regenerator-runtime/runtime.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"three":"node_modules/three/build/three.module.js","cannon-es":"node_modules/cannon-es/dist/cannon-es.js","./helper":"src/helper/index.ts","./libs/paths":"src/libs/paths/index.ts","./loadManager":"src/loadManager.ts","./physcisManager":"src/physcisManager.ts","./entityManager":"src/entityManager/index.ts","three-to-cannon":"node_modules/three-to-cannon/dist/three-to-cannon.modern.js","./playerManager":"src/playerManager.ts","./modelManager/chair":"src/modelManager/chair.ts","./mouseManager":"src/mouseManager.ts","./cameraManager":"src/cameraManager.ts","./entityManager/entity":"src/entityManager/entity.ts","./mapManager":"src/mapManager.ts","./shaderManager":"src/shaderManager/index.ts","regenerator-runtime/runtime":"node_modules/regenerator-runtime/runtime.js","./modelManager/led":"src/modelManager/led.ts"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -61032,7 +61214,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61758" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62246" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

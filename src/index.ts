@@ -15,6 +15,7 @@ import { Entity } from './entityManager/entity';
 import { MapManager } from './mapManager';
 import { ShaderManager } from './shaderManager';
 import 'regenerator-runtime/runtime';
+import { LedModel } from './modelManager/led';
 
 class Main {
     renderer: WebGLRenderer;
@@ -78,10 +79,12 @@ class Main {
         new Helper(this.scene);
         this.renderer.shadowMap.enabled = true;
 
-        // this.renderer.physicallyCorrectLights = true;
-        // this.renderer.outputEncoding = THREE.sRGBEncoding;
-        // this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        this.renderer.setClearColor(0x000000, 1);
+        this.renderer.autoClear = false;
+        this.renderer.outputEncoding = THREE.sRGBEncoding;
+        this.renderer.physicallyCorrectLights = true;
 
+        this.scene.add(new LedModel(1.3, 2).group);
         this.entityManager.addModel(new ChairModel(), { mass: 0, position: [0, 1, 0] });
         this.entityManager.addObject3D(new THREE.Mesh(new THREE.SphereGeometry(.2), new THREE.MeshToonMaterial()), { mass: .5, type: ShapeType.SPHERE }).cannon.position.y = 3;
 
@@ -93,7 +96,7 @@ class Main {
         const delta = currentTime - this.lastTime;
         this.lastTime = currentTime;
 
-        const materials: { [key: string]: any } = {};
+        const materials: { [key: string]: THREE.Material } = {};
 
         // this.renderer.render(this.scene, this.camera);
         

@@ -1,6 +1,6 @@
 import { Model } from '.';
-import * as THREE from 'three';
 import { Layer } from '../shaderManager';
+import * as THREE from 'three';
 
 export class LedModel extends Model {
     color: number;

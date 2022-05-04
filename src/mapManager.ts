@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { Scene } from "three";
 import { EntityManager } from "./entityManager";
 import { MapModel } from "./modelManager/map";
+import vertex from './libs/shaders/sky/vertex.glsl'
+import fragment from './libs/shaders/sky/fragment.glsl'
 
 export class MapManager {
     entityManager: EntityManager;
@@ -18,10 +20,11 @@ export class MapManager {
         this.entityManager.addModel(new MapModel(), { mass: 0 });
 
         this.settingLight();
+        this.settingSky();
     }
 
     settingLight() {
-        const light = new THREE.DirectionalLight(0x444444);
+        const light = new THREE.DirectionalLight(0xdddddd);
         light.position.set(0, 50, 20);
         light.castShadow = true;
 
@@ -31,8 +34,40 @@ export class MapManager {
         light.shadowMapWidth = 4096;
         light.shadowMapHeight = 4096;
         
-        const ambient = new THREE.AmbientLight(0xbbbbbb);
+        const ambient = new THREE.AmbientLight(0xffffff, 1.5);
         this.scene.add(ambient);
         this.scene.add(light);
+    }
+
+    settingSky() {
+        const light = new THREE.HemisphereLight(0xffffff, 0xffffff, .8);
+        light.color.setHSL(.6, 1, .6);
+        light.groundColor.setHSL(.095, 1, .75);
+        light.position.set(0, 50, 0);
+        light.visible = true;
+
+        const uniforms = {
+            topColor: { value: new THREE.Color( 0x0077ff ) },
+            bottomColor: { value: new THREE.Color( 0xffffff ) },
+            offset: { value: 33 },
+            exponent: { value: 0.6 },
+        };
+
+        uniforms.topColor.value.copy(light.color);
+        this.scene.background = new THREE.Color(0, 0, 0);
+        this.scene.fog = new THREE.Fog(this.scene.background, 1, 800);
+        this.scene.fog.color.copy(uniforms.bottomColor.value);
+
+        const skyMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(800, 32, 15),
+            new THREE.ShaderMaterial({
+                vertexShader: vertex,
+                fragmentShader: fragment,
+                side: THREE.BackSide,
+                uniforms,
+            }),
+        );
+
+        this.scene.add(skyMesh);
     }
 }

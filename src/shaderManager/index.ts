@@ -29,7 +29,7 @@ export class ShaderManager {
         
         const renderScene = new RenderPass(this.scene, this.camera);
 
-        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 5, 0, 0);
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1, 0, 0);
 
         const bloomComposer = new EffectComposer(this.renderer);
         bloomComposer.renderToScreen = false;
