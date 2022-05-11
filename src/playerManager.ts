@@ -5,6 +5,7 @@ import { Entity } from './entityManager/entity';
 import { KeyboardManager } from './keyboardManager';
 import { Utils } from './utils';
 import { AnimationManager } from './animationManager';
+import { LoadManager } from './loadManager';
 
 export class PlayerManager {
     keyboardManager: KeyboardManager;
@@ -17,9 +18,9 @@ export class PlayerManager {
     isCanJump: boolean;
     animationManager: AnimationManager;
 
-    constructor(character: Entity) {
+    constructor(character: Entity, loaderManager: LoadManager) {
         this.keyboardManager = new KeyboardManager();
-        this.animationManager = new AnimationManager(character, this.keyboardManager);
+        this.animationManager = new AnimationManager(character, this.keyboardManager, loaderManager.createFBXLoader());
         this.velocity = new CANNON.Vec3();
 
         this.decceleration = new THREE.Vector3(-10, 0, -10);

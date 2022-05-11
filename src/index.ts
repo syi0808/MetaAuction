@@ -14,8 +14,9 @@ import { CameraManager } from './cameraManager';
 import { Entity } from './entityManager/entity';
 import { MapManager } from './mapManager';
 import { ShaderManager } from './shaderManager';
-import 'regenerator-runtime/runtime';
 import { LedModel } from './modelManager/led';
+import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib';
+import 'regenerator-runtime/runtime';
 
 class Main {
     renderer: WebGLRenderer;
@@ -33,6 +34,8 @@ class Main {
     lastTime: number;
 
     constructor() {
+        RectAreaLightUniformsLib.init();
+        
         this.renderer = new THREE.WebGL1Renderer();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(this.renderer.domElement);
@@ -52,24 +55,28 @@ class Main {
 
         this.scene = new THREE.Scene();
         this.physicsManager = new PhysicsManager();
-        this.loadManager = new LoadManager();
+        this.loadManager = new LoadManager(2);
         this.mouseManager = new MouseManager();
-        this.playerManager = new PlayerManager(new Entity(new THREE.Object3D(), new CANNON.Body()));
+        this.playerManager = new PlayerManager(new Entity(new THREE.Object3D(), new CANNON.Body()), this.loadManager);
         this.entityManager = new EntityManager(this.scene, this.physicsManager.world);
         this.cameraManager = new CameraManager(this.camera, this.playerManager);
         this.mapManager = new MapManager(this.scene, this.entityManager);
         this.shaderManager = new ShaderManager(this.renderer, this.scene, this.camera);
 
-        this.loadManager
+        this.loadManager.createFBXLoader()
             .load([Paths.character])
             .then(models => {
                 const character = models[Paths.character];
                 character.scale.setScalar(.01);
                 this.playerManager.setCharacter(this.entityManager.addCustom(character, { mass: 10, size: [.4, 1.77, .28], position: [0, 5, 0], isModel: true }));
             });
-        
+
         this.loadManager.addEventListener("load", () => {
             console.log("Success Loaded !");
+        });
+        
+        this.loadManager.addEventListener("progress", e => {
+            console.log(e.loadedPercent);
         });
 
         this.init();
@@ -84,7 +91,12 @@ class Main {
         this.renderer.outputEncoding = THREE.sRGBEncoding;
         this.renderer.physicallyCorrectLights = true;
 
-        this.scene.add(new LedModel(1.3, 2).group);
+        // const ledModel = new LedModel(1.3, 2).group;
+        // ledModel.position.y = 4;
+        // ledModel.position.z = 10;
+        // ledModel.rotateX(-Math.PI / 2);
+        // this.scene.add(ledModel);
+
         this.entityManager.addModel(new ChairModel(), { mass: 0, position: [0, 1, 0] });
         this.entityManager.addObject3D(new THREE.Mesh(new THREE.SphereGeometry(.2), new THREE.MeshToonMaterial()), { mass: .5, type: ShapeType.SPHERE }).cannon.position.y = 3;
 
@@ -97,8 +109,6 @@ class Main {
         this.lastTime = currentTime;
 
         const materials: { [key: string]: THREE.Material } = {};
-
-        // this.renderer.render(this.scene, this.camera);
         
         this.scene.traverse(obj => {
             if(this.shaderManager.layer.test(obj.layers) === false) {
@@ -118,19 +128,19 @@ class Main {
         });
         this.shaderManager.finalComposer.render();
 
+        if(this.mouseManager.isLocked) {
+            this.cameraManager.angle = this.mouseManager.getAngleY();
+            this.playerManager?.animate(delta, this.mouseManager.getAngleX());
+        }
+
+        this.cameraManager.animate();
         this.entityManager.animate();
         this.physicsManager.animate(delta);
         this.playerManager.animationManager.animate(delta);
-
-        if(this.mouseManager.isLocked) {
-            this.cameraManager.animate(this.mouseManager.getAngleY());
-            this.playerManager?.animate(delta, this.mouseManager.getAngleX());
-        }
 
         requestAnimationFrame(this.animate.bind(this));
     }
 }
 
-// For Debuging
-//@ts-ignore
+//@ts-ignore For Debuging
 window.m = new Main();

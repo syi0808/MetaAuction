@@ -3,7 +3,7 @@ import { AnimationMixer } from 'three';
 import { Entity } from '../entityManager/entity';
 import { KeyboardManager } from '../keyboardManager';
 import { Paths } from '../libs/paths';
-import { LoadManager } from '../loadManager';
+import { Loader } from '../loadManager';
 import { 
     BackwardState,
     ForwardState, 
@@ -29,19 +29,19 @@ export interface Animation {
 export type SetState = (name: string) => void;
 
 export class AnimationManager {
-    loadManager: LoadManager;
+    loader: Loader;
     character: Entity;
     mixer: AnimationMixer;
     currentState?: State;
     animations: { [key: string]: Animation };
     keyboardManager: KeyboardManager;
 
-    constructor(character: Entity, keyboardManager: KeyboardManager) {
+    constructor(character: Entity, keyboardManager: KeyboardManager, loader: Loader) {
         this.character = character;
         this.keyboardManager = keyboardManager;
         this.mixer = new THREE.AnimationMixer(character.three);
-        this.loadManager = new LoadManager();
         this.animations = {};
+        this.loader = loader;
     }
 
     setCharacter(character: Entity) {
@@ -51,7 +51,7 @@ export class AnimationManager {
     }
 
     async init() {
-        const loadedAnimations = await this.loadManager.load([
+        const loadedAnimations = await this.loader.load([
             Paths.idle,
             Paths.jump,
             Paths.forward,

@@ -1,5 +1,5 @@
-import { EntityManager } from "../entityManager";
 import * as THREE from 'three';
+import { EntityManager } from "../entityManager";
 import { Vector3 } from "three";
 import { ShapeType } from "../physcisManager";
 
@@ -37,7 +37,7 @@ export class Model {
     }: BoxOptions) {
         const mesh = new THREE.Mesh(
             new THREE.BoxGeometry(...size),
-            new THREE.MeshToonMaterial({ color })
+            new THREE.MeshPhysicalMaterial({ color })
         );
 
         mesh.position.copy(new Vector3(...position));

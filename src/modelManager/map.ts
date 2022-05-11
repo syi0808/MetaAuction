@@ -15,10 +15,10 @@ export class MapModel extends Model {
         this.group.add(this.createFloor());
 
         // Wall
-        // this.group.add(this.createWallVertical(15));
-        // this.group.add(this.createWallVertical(-15));
-        // this.group.add(this.createWallHorizontal(15));
-        // this.group.add(this.createWallHorizontal(-15));
+        this.group.add(this.createWallVertical(15));
+        this.group.add(this.createWallVertical(-15));
+        this.group.add(this.createWallHorizontal(15));
+        this.group.add(this.createWallHorizontal(-15));
 
         // Ceil
         // this.group.add(this.createCeil());

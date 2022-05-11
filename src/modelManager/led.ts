@@ -18,16 +18,19 @@ export class LedModel extends Model {
     }
 
     init() {
-        // Light
-        this.group.add(this.createLight());
-
         // Grow Box
         this.group.add(this.createGrowBox());
+
+        // Light
+        const [light, lightTarget] = this.createLight();
+        this.group.add(light);
+        this.group.add(lightTarget);
     }
 
     createLight() {
-        const { width, height } = this;
-        return new THREE.RectAreaLight(this.color, 1, width, height);
+        const light = new THREE.SpotLight(this.color, 2, 0, Math.PI / 6, 1);
+        light.castShadow = true;
+        return [light, light.target];
     }
 
     createGrowBox() {
@@ -37,6 +40,7 @@ export class LedModel extends Model {
             new THREE.MeshBasicMaterial({ color })
         );
         mesh.layers.enable(Layer.BLOOM_EFFECT);
+        mesh.rotateX(Math.PI / 2);
         return mesh;
     }
 }

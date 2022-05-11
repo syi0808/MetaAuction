@@ -24,18 +24,18 @@ export class MapManager {
     }
 
     settingLight() {
-        const light = new THREE.DirectionalLight(0xdddddd);
-        light.position.set(0, 50, 20);
+        const light = new THREE.DirectionalLight(0xffffff);
+        light.position.set(0, 60, 30);
         light.castShadow = true;
 
         light.shadow.camera = new THREE.OrthographicCamera(-30, 30, 30, -30, 0.5, 1000);
         light.shadow.bias = .0001;
 
-        light.shadowMapWidth = 4096;
-        light.shadowMapHeight = 4096;
-        
-        const ambient = new THREE.AmbientLight(0xffffff, 1.5);
-        this.scene.add(ambient);
+        light.shadow.mapSize.width = 4096;
+        light.shadow.mapSize.height = 4096;
+
+        const ambient = new THREE.AmbientLight(0xffffff, 2);
+        this.scene.add(ambient); 
         this.scene.add(light);
     }
 

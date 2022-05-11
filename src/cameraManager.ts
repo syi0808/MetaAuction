@@ -6,10 +6,12 @@ export class CameraManager {
     camera: THREE.Camera;
     target: PlayerManager;
     far: number;
+    angle: number;
 
     constructor(camera: THREE.Camera, target: PlayerManager) {
         this.camera = camera;
         this.target = target;
+        this.angle = 0;
         this.far = 1;
     }
 
@@ -31,8 +33,8 @@ export class CameraManager {
         return lookAt;
     }
 
-    animate(angle: number) {
-        this.camera.position.copy(this.getOffset(angle));
+    animate() {
+        this.camera.position.copy(this.getOffset(this.angle));
         this.camera.lookAt(this.getLookAt());
     }
 }
