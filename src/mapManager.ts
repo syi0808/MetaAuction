@@ -24,7 +24,7 @@ export class MapManager {
     }
 
     settingLight() {
-        const light = new THREE.DirectionalLight(0xffffff);
+        const light = new THREE.DirectionalLight(0x444444);
         light.position.set(0, 60, 30);
         light.castShadow = true;
 
@@ -34,8 +34,8 @@ export class MapManager {
         light.shadow.mapSize.width = 4096;
         light.shadow.mapSize.height = 4096;
 
-        const ambient = new THREE.AmbientLight(0xffffff, 2);
-        this.scene.add(ambient); 
+        const ambient = new THREE.AmbientLight(0xbbbbbb);
+        this.scene.add(ambient);
         this.scene.add(light);
     }
 

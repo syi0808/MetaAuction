@@ -3,8 +3,12 @@ export enum Paths {
     "map" = "./models/CLASSROOM.fbx",
     "idle" = "./animations/idle.fbx",
     "forward" = "./animations/forward.fbx",
+    "forwardleft" = "./animations/forwardleft.fbx",
+    "forwardright" = "./animations/forwardright.fbx",
     "backward" = "./animations/backward.fbx",
+    "backwardleft" = "./animations/backwardleft.fbx",
+    "backwardright" = "./animations/backwardright.fbx",
     "left" = "./animations/left.fbx",
     "right" = "./animations/right.fbx",
-    "jump" = "./animations/jumping.fbx",
+    "jump" = "./animations/commonjump.fbx",
 }

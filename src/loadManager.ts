@@ -2,22 +2,22 @@ import * as THREE from 'three'
 import { LoadingManager } from "three";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
 
-type ModelsType = { [key: string]: THREE.Group };
+type ModelsType<T extends string> = { [key in T]: THREE.Group };
+type EventTypes = "load" | "progress";
 
 interface ProgressEvent {
     loadedPercent: number;
 }
 
-type EventTypes = "load" | "progress";
 
-interface Event {
+interface EventCallback {
     load: () => void;
     progress: (e: ProgressEvent) => void;
 }
 
 export class LoadManager {
-    onLoadCallbacks: (() => void)[];
-    onProgressCallbacks: ((e: ProgressEvent) => void)[];
+    onLoadCallbacks: EventCallback["load"][];
+    onProgressCallbacks: EventCallback["progress"][];
     completeCount: number;
     maxCount: number;
     progress: number;
@@ -39,48 +39,48 @@ export class LoadManager {
         if(this.completeCount === this.maxCount) this.onLoadCallbacks.forEach(c => c());
     }
 
-    onProgress(percent: number) {
-        this.progress += percent / this.maxCount;
+    onProgress({ loadedPercent }: ProgressEvent) {
+        this.progress += loadedPercent / this.maxCount;
         this.onProgressCallbacks.forEach(c => c({ loadedPercent: this.progress }));
     }
 
-    addEventListener<E extends EventTypes>(event: E, callback: Event[E]) { 
-        switch(event) {
+    addEventListener<E extends EventTypes>(eventCallback: E, callback: EventCallback[E]) {
+        switch(eventCallback) {
             case "load":
-                return this.onLoadCallbacks.push(callback as Event["load"]);
+                this.onLoadCallbacks.push(callback as EventCallback["load"]);
+                break;
             case "progress":
-                return this.onProgressCallbacks.push(callback as Event["progress"]);
+                this.onProgressCallbacks.push(callback as EventCallback["progress"]);
+                break;
         }
     }
 }
 
 export class Loader {
     manager: LoadingManager;
-    onLoad: () => void;
-    onProgress: (percent: number) => void;
+    onLoad: EventCallback["load"];
+    onProgress: EventCallback["progress"];
 
-    constructor(onLoad: () => void, onProgress: (percent: number) => void) {
+    constructor(onLoad: EventCallback["load"], onProgress: EventCallback["progress"]) {
         this.manager = new THREE.LoadingManager();
         this.onLoad = onLoad;
         this.onProgress = onProgress;
     }
 
-    load(paths: string[]): Promise<ModelsType> {
+    load<T extends string>(paths: T[]): Promise<ModelsType<T>> {
         return new Promise((res, rej) => {
             const loader = new FBXLoader(this.manager);
-            const models: ModelsType = {};
+            const models = {} as ModelsType<T>;
             let prevPercent: number = 0;
 
-            paths.forEach(path => {
-                loader.load(path, model => models[path] = model);
-            });
+            paths.forEach(path => loader.load(path, model => models[path] = model));
 
             this.manager.onLoad = () => {
                 res(models);
                 this.onLoad();
             }
             this.manager.onProgress = (_url, loaded, total) => {
-                this.onProgress(loaded / total * 100 - prevPercent);
+                this.onProgress({ loadedPercent: loaded / total * 100 - prevPercent });
                 prevPercent = loaded / total * 100;
             }
             this.manager.onError = rej;

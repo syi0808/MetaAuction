@@ -63,7 +63,8 @@ class Main {
         this.mapManager = new MapManager(this.scene, this.entityManager);
         this.shaderManager = new ShaderManager(this.renderer, this.scene, this.camera);
 
-        this.loadManager.createFBXLoader()
+        this.loadManager
+            .createFBXLoader()
             .load([Paths.character])
             .then(models => {
                 const character = models[Paths.character];
@@ -74,7 +75,7 @@ class Main {
         this.loadManager.addEventListener("load", () => {
             console.log("Success Loaded !");
         });
-        
+
         this.loadManager.addEventListener("progress", e => {
             console.log(e.loadedPercent);
         });
@@ -89,13 +90,6 @@ class Main {
         this.renderer.setClearColor(0x000000, 1);
         this.renderer.autoClear = false;
         this.renderer.outputEncoding = THREE.sRGBEncoding;
-        this.renderer.physicallyCorrectLights = true;
-
-        // const ledModel = new LedModel(1.3, 2).group;
-        // ledModel.position.y = 4;
-        // ledModel.position.z = 10;
-        // ledModel.rotateX(-Math.PI / 2);
-        // this.scene.add(ledModel);
 
         this.entityManager.addModel(new ChairModel(), { mass: 0, position: [0, 1, 0] });
         this.entityManager.addObject3D(new THREE.Mesh(new THREE.SphereGeometry(.2), new THREE.MeshToonMaterial()), { mass: .5, type: ShapeType.SPHERE }).cannon.position.y = 3;
@@ -103,30 +97,19 @@ class Main {
         this.animate();
     }
 
+    resize() {
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
     animate() {
         const currentTime = this.clock.getElapsedTime();
         const delta = currentTime - this.lastTime;
         this.lastTime = currentTime;
 
-        const materials: { [key: string]: THREE.Material } = {};
-        
-        this.scene.traverse(obj => {
-            if(this.shaderManager.layer.test(obj.layers) === false) {
-                //@ts-ignore
-                materials[obj.uuid] = obj.material;
-                //@ts-ignore
-                obj.material = new THREE.MeshBasicMaterial({ color: "black" });
-            }
-        });
-        this.shaderManager.bloomComposer.render();
-        this.scene.traverse(obj => {
-            if(materials[obj.uuid]) {
-                //@ts-ignore
-                obj.material = materials[obj.uuid];
-                delete materials[obj.uuid];
-            }
-        });
-        this.shaderManager.finalComposer.render();
+        this.shaderManager.animate();
 
         if(this.mouseManager.isLocked) {
             this.cameraManager.angle = this.mouseManager.getAngleY();
@@ -136,7 +119,6 @@ class Main {
         this.cameraManager.animate();
         this.entityManager.animate();
         this.physicsManager.animate(delta);
-        this.playerManager.animationManager.animate(delta);
 
         requestAnimationFrame(this.animate.bind(this));
     }

@@ -55,4 +55,26 @@ export class ShaderManager {
         this.bloomComposer = bloomComposer;
         this.finalComposer = finalComposer;
     }
+
+    animate() {
+        const materials: { [key: string]: THREE.Material } = {};
+        
+        this.scene.traverse(obj => {
+            if(this.layer.test(obj.layers) === false) {
+                //@ts-ignore
+                materials[obj.uuid] = obj.material;
+                //@ts-ignore
+                obj.material = new THREE.MeshBasicMaterial({ color: "black" });
+            }
+        });
+        this.bloomComposer.render();
+        this.scene.traverse(obj => {
+            if(materials[obj.uuid]) {
+                //@ts-ignore
+                obj.material = materials[obj.uuid];
+                delete materials[obj.uuid];
+            }
+        });
+        this.finalComposer.render();
+    }
 }
