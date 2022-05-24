@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { Scene } from "three";
-import { EntityManager } from "./entityManager";
-import { MapModel } from "./modelManager/map";
-import vertex from './libs/shaders/sky/vertex.glsl'
-import fragment from './libs/shaders/sky/fragment.glsl'
+import { Scene } from 'three';
+import { EntityManager } from './entityManager';
+import { MapModel } from './modelManager/map';
+import vertex from './libs/shaders/sky/vertex.glsl';
+import fragment from './libs/shaders/sky/fragment.glsl';
 
 export class MapManager {
     entityManager: EntityManager;

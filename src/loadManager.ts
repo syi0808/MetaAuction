@@ -15,16 +15,21 @@ interface EventCallback {
     progress: (e: ProgressEvent) => void;
 }
 
+type EventCallbacks = {
+    [key in keyof EventCallback]: (EventCallback[keyof EventCallback])[];
+}
+
 export class LoadManager {
-    onLoadCallbacks: EventCallback["load"][];
-    onProgressCallbacks: EventCallback["progress"][];
+    callbacks: EventCallbacks;
     completeCount: number;
     maxCount: number;
     progress: number;
 
     constructor(maxCount: number) {
-        this.onLoadCallbacks = [];
-        this.onProgressCallbacks = [];
+        this.callbacks = {
+            load: [],
+            progress: [],
+        }
         this.completeCount = 0;
         this.maxCount = maxCount;
         this.progress = 0;
@@ -36,21 +41,21 @@ export class LoadManager {
 
     onLoad() {
         this.completeCount += 1;
-        if(this.completeCount === this.maxCount) this.onLoadCallbacks.forEach(c => c());
+        if(this.completeCount === this.maxCount) this.callbacks.load.forEach(c => (c as EventCallback["load"])());
     }
 
     onProgress({ loadedPercent }: ProgressEvent) {
         this.progress += loadedPercent / this.maxCount;
-        this.onProgressCallbacks.forEach(c => c({ loadedPercent: this.progress }));
+        this.callbacks.progress.forEach(c => (c as EventCallback["progress"])({ loadedPercent: this.progress }));
     }
 
     addEventListener<E extends EventTypes>(eventCallback: E, callback: EventCallback[E]) {
         switch(eventCallback) {
             case "load":
-                this.onLoadCallbacks.push(callback as EventCallback["load"]);
+                this.callbacks.load.push(callback as EventCallback["load"]);
                 break;
             case "progress":
-                this.onProgressCallbacks.push(callback as EventCallback["progress"]);
+                this.callbacks.progress.push(callback as EventCallback["progress"]);
                 break;
         }
     }
@@ -80,8 +85,9 @@ export class Loader {
                 this.onLoad();
             }
             this.manager.onProgress = (_url, loaded, total) => {
-                this.onProgress({ loadedPercent: loaded / total * 100 - prevPercent });
-                prevPercent = loaded / total * 100;
+                const percent = loaded / total * 100;
+                this.onProgress({ loadedPercent: percent - prevPercent });
+                prevPercent = percent;
             }
             this.manager.onError = rej;
         });

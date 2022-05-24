@@ -11,12 +11,13 @@ import { PlayerManager } from './playerManager';
 import { ChairModel } from './modelManager/chair';
 import { MouseManager } from './mouseManager';
 import { CameraManager } from './cameraManager';
-import { Entity } from './entityManager/entity';
 import { MapManager } from './mapManager';
 import { ShaderManager } from './shaderManager';
+import { Entity } from './entityManager/entity';
 import { LedModel } from './modelManager/led';
 import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib';
 import 'regenerator-runtime/runtime';
+import { PageEnum, UIManager } from './uiManager';
 
 class Main {
     renderer: WebGLRenderer;
@@ -30,6 +31,7 @@ class Main {
     playerManager: PlayerManager;
     mapManager: MapManager;
     shaderManager: ShaderManager;
+    uiManager: UIManager;
     clock: THREE.Clock;
     lastTime: number;
 
@@ -40,12 +42,7 @@ class Main {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(this.renderer.domElement);
 
-        this.camera = new THREE.PerspectiveCamera(
-            75,
-            window.innerWidth / window.innerHeight,
-            0.1,
-            1000
-        );
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         this.camera.position.z = 10;
         this.camera.position.y = 5;
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
@@ -54,6 +51,7 @@ class Main {
         this.lastTime = 0;
 
         this.scene = new THREE.Scene();
+        this.uiManager = new UIManager();
         this.physicsManager = new PhysicsManager();
         this.loadManager = new LoadManager(2);
         this.mouseManager = new MouseManager();
@@ -62,23 +60,6 @@ class Main {
         this.cameraManager = new CameraManager(this.camera, this.playerManager);
         this.mapManager = new MapManager(this.scene, this.entityManager);
         this.shaderManager = new ShaderManager(this.renderer, this.scene, this.camera);
-
-        this.loadManager
-            .createFBXLoader()
-            .load([Paths.character])
-            .then(models => {
-                const character = models[Paths.character];
-                character.scale.setScalar(.01);
-                this.playerManager.setCharacter(this.entityManager.addCustom(character, { mass: 10, size: [.4, 1.77, .28], position: [0, 5, 0], isModel: true }));
-            });
-
-        this.loadManager.addEventListener("load", () => {
-            console.log("Success Loaded !");
-        });
-
-        this.loadManager.addEventListener("progress", e => {
-            console.log(e.loadedPercent);
-        });
 
         this.init();
     }
@@ -93,6 +74,25 @@ class Main {
 
         this.entityManager.addModel(new ChairModel(), { mass: 0, position: [0, 1, 0] });
         this.entityManager.addObject3D(new THREE.Mesh(new THREE.SphereGeometry(.2), new THREE.MeshToonMaterial()), { mass: .5, type: ShapeType.SPHERE }).cannon.position.y = 3;
+
+        this.loadManager
+            .createFBXLoader()
+            .load([Paths.character])
+            .then(models => {
+                const character = models[Paths.character];
+                character.scale.setScalar(.01);
+                this.playerManager.setCharacter(this.entityManager.addCustom(character, { mass: 10, size: [.4, 1.77, .28], position: [0, 5, 0], isModel: true }));
+            });
+
+        this.loadManager.addEventListener("load", () => {
+            console.log("Success Loaded !");
+            setTimeout(() => this.uiManager.initPage(PageEnum.None), 300);
+        });
+
+        this.loadManager.addEventListener("progress", e => {
+            console.log(e.loadedPercent);
+            this.uiManager.updateProgress(e.loadedPercent);
+        });
 
         this.animate();
     }
