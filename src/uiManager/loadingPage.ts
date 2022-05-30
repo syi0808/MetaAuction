@@ -1,9 +1,6 @@
 import { css, keyframes } from '@emotion/css';
 
 export const Container = css`
-    position: absolute;
-    top: 0;
-    left: 0;
     width: 100%;
     height: 100%;
     background: #A2DE9C;
@@ -12,7 +9,7 @@ export const Container = css`
     justify-content: center;
 `;
 
-export const Circle = css`
+const Circle = css`
     width: 300px;
     height: 300px;
     border: 7px solid #444;
@@ -24,7 +21,7 @@ export const Circle = css`
     justify-content: center;
 `;
 
-export const InnerCircle = css`
+const InnerCircle = css`
     width: 100%;
     height: 100%;
     position: absolute;
@@ -44,7 +41,7 @@ const Rotate = keyframes`
     }
 `;
 
-export const Water = css`
+const Water = css`
     width: 200%;
     height: 200%;
     border-radius: 30%;
@@ -53,8 +50,17 @@ export const Water = css`
     animation: ${Rotate} 3s infinite linear;
 `;
 
-export const Percent = css`
+const Percent = css`
     font-family: 'Koulen', cursive;
     font-size: 42px;
     z-index: 2;
+`;
+
+export const LoadingPage = `
+    <div class="${Circle}">
+        <div id="circle" class="${InnerCircle}">
+            <div class="${Water}"></div>
+        </div>
+        <span id="percent" class=${Percent}>0%</span>
+    </div>
 `;

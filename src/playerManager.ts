@@ -94,8 +94,6 @@ export class PlayerManager {
         if(right) this.addVector(Utils.tToC().vector3(directionSide.multiplyScalar(this.speed * delta)));
         if(left) this.addVector(Utils.tToC().vector3(directionSide.multiplyScalar(-this.speed * delta)));
 
-        this.animationManager.animate(delta, this.isCanJump);
-
         if(space && this.isCanJump) {
             this.character.cannon.velocity.y = 7;
             this.isCanJump = false;

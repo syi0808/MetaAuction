@@ -15,9 +15,7 @@ interface EventCallback {
     progress: (e: ProgressEvent) => void;
 }
 
-type EventCallbacks = {
-    [key in keyof EventCallback]: (EventCallback[keyof EventCallback])[];
-}
+type EventCallbacks = { [key in keyof EventCallback]: (EventCallback[keyof EventCallback])[]; };
 
 export class LoadManager {
     callbacks: EventCallbacks;

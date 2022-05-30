@@ -13,11 +13,12 @@ import { MouseManager } from './mouseManager';
 import { CameraManager } from './cameraManager';
 import { MapManager } from './mapManager';
 import { ShaderManager } from './shaderManager';
+import { PageEnum, UIManager } from './uiManager';
 import { Entity } from './entityManager/entity';
 import { LedModel } from './modelManager/led';
 import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib';
 import 'regenerator-runtime/runtime';
-import { PageEnum, UIManager } from './uiManager';
+import { createTextTextrue } from './libs/textures/text';
 
 class Main {
     renderer: WebGLRenderer;
@@ -37,7 +38,7 @@ class Main {
 
     constructor() {
         RectAreaLightUniformsLib.init();
-        
+
         this.renderer = new THREE.WebGL1Renderer();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(this.renderer.domElement);
@@ -51,10 +52,10 @@ class Main {
         this.lastTime = 0;
 
         this.scene = new THREE.Scene();
-        this.uiManager = new UIManager();
         this.physicsManager = new PhysicsManager();
         this.loadManager = new LoadManager(2);
         this.mouseManager = new MouseManager();
+        this.uiManager = new UIManager(this.renderer.domElement);
         this.playerManager = new PlayerManager(new Entity(new THREE.Object3D(), new CANNON.Body()), this.loadManager);
         this.entityManager = new EntityManager(this.scene, this.physicsManager.world);
         this.cameraManager = new CameraManager(this.camera, this.playerManager);
@@ -67,6 +68,18 @@ class Main {
     init() {
         new Helper(this.scene);
         this.renderer.shadowMap.enabled = true;
+
+        const temp = new THREE.Mesh(
+            new THREE.PlaneGeometry(),
+            new THREE.MeshBasicMaterial({
+                map: createTextTextrue({
+                    text: "안녕하세요",
+                }),
+                transparent: true
+            }),
+        );
+        temp.position.set(0, 5, 0);
+        this.scene.add(temp);
 
         this.renderer.setClearColor(0x000000, 1);
         this.renderer.autoClear = false;
@@ -81,7 +94,7 @@ class Main {
             .then(models => {
                 const character = models[Paths.character];
                 character.scale.setScalar(.01);
-                this.playerManager.setCharacter(this.entityManager.addCustom(character, { mass: 10, size: [.4, 1.77, .28], position: [0, 5, 0], isModel: true }));
+                this.playerManager.setCharacter(this.entityManager.addCustom(character, { mass: 10, size: [.5, 1.77, .38], position: [0, 5, 0], isModel: true }));
             });
 
         this.loadManager.addEventListener("load", () => {
@@ -100,7 +113,6 @@ class Main {
     resize() {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
-
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
@@ -110,6 +122,7 @@ class Main {
         this.lastTime = currentTime;
 
         this.shaderManager.animate();
+        this.playerManager.animationManager.animate(delta, this.playerManager.isCanJump);
 
         if(this.mouseManager.isLocked) {
             this.cameraManager.angle = this.mouseManager.getAngleY();
