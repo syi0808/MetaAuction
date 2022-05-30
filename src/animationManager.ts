@@ -37,7 +37,7 @@ export class AnimationManager {
         this.init();
     }
 
-    private async init() {
+    async init() {
         const loadedAnimations = await this.loader.load([
             Paths.idle,
             Paths.jump,
@@ -56,17 +56,17 @@ export class AnimationManager {
         this.setState("idle");
     }
 
-    private setState(name: AnimationTypes) {
+    setState(name: AnimationTypes) {
         if(!this.animations[this.currentState] || !this.animations[name]) return;
         const prevState = this.currentState;
 
-        if(prevState === name) return;
+        if(prevState === name && name !== "jump") return;
 
         this.currentState = name;
         this.enter(prevState);
     }
 
-    private onLoad(name: AnimationTypes, animation: THREE.Group) {
+    onLoad(name: AnimationTypes, animation: THREE.Group) {
         const clip = animation.animations[0];
         const action = this.mixer.clipAction(clip);
         
@@ -78,7 +78,7 @@ export class AnimationManager {
         };
     }
 
-    private enter(prevName?: AnimationTypes) {
+    enter(prevName?: AnimationTypes) {
         const nextAction = (this.animations[this.currentState] as Animation).action;
         
         if(prevName) {
@@ -94,7 +94,7 @@ export class AnimationManager {
         nextAction.play();
     }
 
-    private updateDirection(isCanJump: boolean) {
+    updateDirection(isCanJump: boolean) {
         const keys = { ...this.keyboardManager.keys };
         if(keys.forward && keys.backward) keys.forward = keys.backward = false;
         if(keys.left && keys.right) keys.left = keys.right = false;

@@ -62,6 +62,8 @@ class Main {
         this.mapManager = new MapManager(this.scene, this.entityManager);
         this.shaderManager = new ShaderManager(this.renderer, this.scene, this.camera);
 
+        window.addEventListener("resize", this.resize.bind(this));
+
         this.init();
     }
 
