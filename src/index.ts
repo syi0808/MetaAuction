@@ -15,10 +15,11 @@ import { MapManager } from './mapManager';
 import { ShaderManager } from './shaderManager';
 import { PageEnum, UIManager } from './uiManager';
 import { Entity } from './entityManager/entity';
+import { ExhibitModel } from './modelManager/exhibit';
+import { TextTexture } from './libs/textures/text';
 import { LedModel } from './modelManager/led';
 import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib';
 import 'regenerator-runtime/runtime';
-import { createTextTextrue } from './libs/textures/text';
 
 class Main {
     renderer: WebGLRenderer;
@@ -53,8 +54,8 @@ class Main {
 
         this.scene = new THREE.Scene();
         this.physicsManager = new PhysicsManager();
-        this.loadManager = new LoadManager(2);
         this.mouseManager = new MouseManager();
+        this.loadManager = new LoadManager(2);
         this.uiManager = new UIManager(this.renderer.domElement);
         this.playerManager = new PlayerManager(new Entity(new THREE.Object3D(), new CANNON.Body()), this.loadManager);
         this.entityManager = new EntityManager(this.scene, this.physicsManager.world);
@@ -66,24 +67,18 @@ class Main {
     }
 
     init() {
-        new Helper(this.scene);
-        this.renderer.shadowMap.enabled = true;
-
-        const temp = new THREE.Mesh(
-            new THREE.PlaneGeometry(),
-            new THREE.MeshBasicMaterial({
-                map: createTextTextrue({
-                    text: "안녕하세요",
-                }),
-                transparent: true
-            }),
-        );
-        temp.position.set(0, 5, 0);
-        this.scene.add(temp);
-
         this.renderer.setClearColor(0x000000, 1);
         this.renderer.autoClear = false;
+        this.renderer.shadowMap.enabled = true;
         this.renderer.outputEncoding = THREE.sRGBEncoding;
+
+        this.scene.add(
+            new ExhibitModel({
+                title: "가지",
+                url: "https://www.ui4u.go.kr/depart/img/content/sub03/img_con03030100_01.jpg",
+                price: 10000,
+            }).group
+        );
 
         this.entityManager.addModel(new ChairModel(), { mass: 0, position: [0, 1, 0] });
         this.entityManager.addObject3D(new THREE.Mesh(new THREE.SphereGeometry(.2), new THREE.MeshToonMaterial()), { mass: .5, type: ShapeType.SPHERE }).cannon.position.y = 3;
@@ -111,9 +106,9 @@ class Main {
     }
 
     resize() {
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
     animate() {

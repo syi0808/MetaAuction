@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 interface Option {
-    text: string;
+    text: string | string[];
     width?: number;
     height?: number;
     fontSize?: number;
@@ -10,28 +10,75 @@ interface Option {
     color?: string;
 }
 
-export const createTextTextrue = ({
-    text,
-    width = 1000,
-    height = 1000,
-    fontFamily = "Noto Sans KR",
-    fontSize = 100,
-    fontWeight = 900,
-    color = "#000000",
-}: Option) => {
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+export class TextTexture {
+    canvas: HTMLCanvasElement;
+    ctx: CanvasRenderingContext2D;
+    textrue: THREE.CanvasTexture;
+    option: Required<Option>;
 
-    ctx.fillStyle = "transparent";
-    ctx.fillRect(0, 0, width, height);
-    
-    ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
-    ctx.fillStyle = color;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+    constructor({
+        text,
+        width = 1000,
+        height = 1000,
+        fontFamily = "Noto Sans KR",
+        fontSize = 100,
+        fontWeight = 900,
+        color = "#000000",
+    }: Option) {
+        this.canvas = document.createElement("canvas");
+        this.ctx = this.canvas.getContext("2d") as CanvasRenderingContext2D;
+        this.textrue = new THREE.CanvasTexture(this.canvas);
 
-    return new THREE.CanvasTexture(canvas);
+        this.option = {
+            text,
+            width,
+            height,
+            fontFamily,
+            fontSize,
+            fontWeight,
+            color,
+        };
+
+        document.body.appendChild(this.canvas);
+
+        this.init();
+    }
+
+    init() {
+        const { width, height } = this.option;
+
+        this.canvas.width = width;
+        this.canvas.height = height;
+
+        this.render();
+    }
+
+    update(option: Partial<Option>) {
+        this.option = { ...this.option, ...option };
+        this.render();
+    }
+
+    render() {
+        const {
+            text,
+            width,
+            height,
+            fontFamily,
+            fontSize,
+            fontWeight,
+            color,
+        } = this.option;
+
+        this.ctx.clearRect(0, 0, width, height);
+        this.ctx.fillStyle = "transparent";
+        this.ctx.fillRect(0, 0, width, height);
+
+        this.ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+        this.ctx.fillStyle = color;
+        this.ctx.textAlign = "center";
+        this.ctx.textBaseline = "middle";
+
+        if(typeof text === "string") this.ctx.fillText(text, this.canvas.width / 2, this.canvas.height / 2);
+        else text.forEach((text, i) => this.ctx.fillText(text, this.canvas.width / 2, this.canvas.height / 2 + i * fontSize));
+    }
 }
