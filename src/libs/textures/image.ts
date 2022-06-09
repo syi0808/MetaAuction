@@ -4,6 +4,8 @@ export class ImageTextrue {
     texture: THREE.Texture;
 
     constructor(url: string) {
-        this.texture = new THREE.TextureLoader().load(url);
+        const loader = new THREE.TextureLoader();
+        loader.setCrossOrigin("anonymous");
+        this.texture = loader.load(url);
     }
 }

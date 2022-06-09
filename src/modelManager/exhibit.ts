@@ -1,9 +1,13 @@
 import { Model } from '.';
 import * as THREE from 'three';
 import { TextTexture } from '../libs/textures/text';
+import { ImageTextrue } from '../libs/textures/image';
+
+export type ExtraType = "image" | "model";
 
 export interface Exhibit {
     title: string;
+    type: ExtraType;
     url: string;
     price: number;
 }
@@ -35,10 +39,25 @@ export class ExhibitModel extends Model {
             })],
         ));
 
-        //
-
-        this.group.rotateY(-Math.PI / 2);
-        this.group.position.y = 3;
+        //Image or 3DModel
+        switch(this.exhibit.type) {
+            case "image": {
+                const mesh = new THREE.Mesh(
+                    new THREE.PlaneGeometry(2, 2),
+                    new THREE.MeshBasicMaterial({
+                        map: new ImageTextrue(this.exhibit.url).texture,
+                    })
+                );
+                mesh.material.map!.needsUpdate = true;
+                mesh.position.y = 1.5;
+                mesh.rotateY(Math.PI / 2);
+                this.group.add(mesh);
+                break;
+            }
+            case "model": {
+                break;
+            }
+        }
     }
 
     createBody() {

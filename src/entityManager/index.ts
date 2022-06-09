@@ -15,8 +15,9 @@ interface Option {
 
 interface AddModelOption {
     mass?: number;
-    position?: number[];
-    size?: number[];
+    position?: [number, number, number];
+    degree?: [number, number, number];
+    size?: [number, number, number];
     isModel?: boolean;
 }
 
@@ -56,11 +57,13 @@ export class EntityManager {
 
     addModel(model: Model, {
         mass = 1,
-        position = [0, 0, 0]
+        position = [0, 0, 0],
+        degree = [0, 0, 0],
     }: AddModelOption) {
         const body = new CANNON.Body({
             mass,
             position: new CANNON.Vec3(...position),
+            quaternion: new CANNON.Quaternion().setFromEuler(...degree.map(n => Math.PI / 180 * n) as [number, number, number]),
         });
         const entity = new Entity(model.group, body);
         

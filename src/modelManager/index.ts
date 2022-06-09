@@ -4,9 +4,9 @@ import { Vector3 } from "three";
 import { ShapeType } from "../physcisManager";
 
 interface BoxOptions {
-    position?: number[];
-    size?: number[];
-    degree?: number[];
+    position?: [number, number, number];
+    size?: [number, number, number];
+    degree?: [number, number, number];
     color?: number;
 }
 

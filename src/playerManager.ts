@@ -46,6 +46,10 @@ export class PlayerManager {
         });
     }
 
+    setPlayerVector(position: [number, number, number]) {
+        this.character.cannon.position.set(...position);
+    }
+
     setCharacter(character: Entity) {
         this.character = character;
         this.animationManager.setCharacter(character);

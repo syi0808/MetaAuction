@@ -20,6 +20,7 @@ import { TextTexture } from './libs/textures/text';
 import { LedModel } from './modelManager/led';
 import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib';
 import 'regenerator-runtime/runtime';
+import { PortalManager } from './portalManager';
 
 class Main {
     renderer: WebGLRenderer;
@@ -34,6 +35,7 @@ class Main {
     mapManager: MapManager;
     shaderManager: ShaderManager;
     uiManager: UIManager;
+    portalManager: PortalManager;
     clock: THREE.Clock;
     lastTime: number;
 
@@ -62,6 +64,7 @@ class Main {
         this.cameraManager = new CameraManager(this.camera, this.playerManager);
         this.mapManager = new MapManager(this.scene, this.entityManager);
         this.shaderManager = new ShaderManager(this.renderer, this.scene, this.camera);
+        this.portalManager = new PortalManager(this.playerManager);
 
         window.addEventListener("resize", this.resize.bind(this));
 
@@ -74,14 +77,14 @@ class Main {
         this.renderer.shadowMap.enabled = true;
         this.renderer.outputEncoding = THREE.sRGBEncoding;
 
-        this.scene.add(
-            new ExhibitModel({
-                title: "가지",
-                url: "https://www.ui4u.go.kr/depart/img/content/sub03/img_con03030100_01.jpg",
-                price: 10000,
-            }).group
-        );
+        this.portalManager.addPortal([0, 0, -4], [1, 1, 1], console.log);
 
+        // this.entityManager.addModel(new ExhibitModel({
+        //     title: "가지",
+        //     type: "image",
+        //     url: "",
+        //     price: 10000,
+        // }), { mass: 0, position: [0, 1, 3], degree: [0, -90, 0] });
         this.entityManager.addModel(new ChairModel(), { mass: 0, position: [0, 1, 0] });
         this.entityManager.addObject3D(new THREE.Mesh(new THREE.SphereGeometry(.2), new THREE.MeshToonMaterial()), { mass: .5, type: ShapeType.SPHERE }).cannon.position.y = 3;
 
@@ -129,6 +132,8 @@ class Main {
         this.cameraManager.animate();
         this.entityManager.animate();
         this.physicsManager.animate(delta);
+
+        this.portalManager.update();
 
         requestAnimationFrame(this.animate.bind(this));
     }
