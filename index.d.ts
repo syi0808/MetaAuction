@@ -7,5 +7,5 @@ declare global {
 }
 
 interface Element {
-    addClassName(name: string): void;
+    addClassName(name: string): this;
 }

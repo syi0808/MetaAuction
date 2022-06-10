@@ -18,9 +18,9 @@ import { Entity } from './entityManager/entity';
 import { ExhibitModel } from './modelManager/exhibit';
 import { TextTexture } from './libs/textures/text';
 import { LedModel } from './modelManager/led';
+import { PortalManager } from './portalManager';
 import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib';
 import 'regenerator-runtime/runtime';
-import { PortalManager } from './portalManager';
 
 class Main {
     renderer: WebGLRenderer;
@@ -62,9 +62,9 @@ class Main {
         this.playerManager = new PlayerManager(new Entity(new THREE.Object3D(), new CANNON.Body()), this.loadManager);
         this.entityManager = new EntityManager(this.scene, this.physicsManager.world);
         this.cameraManager = new CameraManager(this.camera, this.playerManager);
-        this.mapManager = new MapManager(this.scene, this.entityManager);
-        this.shaderManager = new ShaderManager(this.renderer, this.scene, this.camera);
         this.portalManager = new PortalManager(this.playerManager);
+        this.mapManager = new MapManager(this.scene, this.entityManager, this.portalManager);
+        this.shaderManager = new ShaderManager(this.renderer, this.scene, this.camera);
 
         window.addEventListener("resize", this.resize.bind(this));
 
@@ -77,16 +77,14 @@ class Main {
         this.renderer.shadowMap.enabled = true;
         this.renderer.outputEncoding = THREE.sRGBEncoding;
 
-        this.portalManager.addPortal([0, 0, -4], [1, 1, 1], console.log);
-
         // this.entityManager.addModel(new ExhibitModel({
         //     title: "가지",
         //     type: "image",
         //     url: "",
         //     price: 10000,
         // }), { mass: 0, position: [0, 1, 3], degree: [0, -90, 0] });
-        this.entityManager.addModel(new ChairModel(), { mass: 0, position: [0, 1, 0] });
-        this.entityManager.addObject3D(new THREE.Mesh(new THREE.SphereGeometry(.2), new THREE.MeshToonMaterial()), { mass: .5, type: ShapeType.SPHERE }).cannon.position.y = 3;
+        // this.entityManager.addModel(new ChairModel(), { mass: 0, position: [0, 1, 0] });
+        // this.entityManager.addObject3D(new THREE.Mesh(new THREE.SphereGeometry(.2), new THREE.MeshToonMaterial()), { mass: .5, type: ShapeType.SPHERE }).cannon.position.y = 3;
 
         this.loadManager
             .createFBXLoader()

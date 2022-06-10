@@ -1,6 +1,6 @@
 import { Model } from '.';
 
-export class MapModel extends Model {
+export class ShowroomModel extends Model {
     color: number;
     size: number;
     height: number;

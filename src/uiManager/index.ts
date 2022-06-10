@@ -13,6 +13,7 @@ type Pages = { [key in PageEnum]: HTMLElement};
 
 Element.prototype.addClassName = function(name) {
     this.setAttribute("class", `${this.getAttribute("class")} ${name}`);
+    return this;
 }
 
 export const PageTransitionDuration = 800;
@@ -45,9 +46,7 @@ export class UIManager {
     }
 
     createContainer() {
-        const dom = document.createElement("div");
-        dom.addClassName(PageContainer);
-        return dom;
+        return document.createElement("div").addClassName(PageContainer);
     }
 
     init() {
