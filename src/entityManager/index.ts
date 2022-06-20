@@ -17,7 +17,7 @@ interface AddModelOption {
     mass?: number;
     position?: [number, number, number];
     degree?: [number, number, number];
-    size?: [number, number, number];
+    scale?: [number, number, number];
     isModel?: boolean;
 }
 
@@ -35,10 +35,10 @@ export class EntityManager {
     addCustom(model: Object3D, {
         mass = 1,
         position = [0, 0, 0],
-        size = [1, 1, 1],
+        scale = [1, 1, 1],
         isModel
     }: AddModelOption) {
-        const halfExtents = Utils.tToC().vector3(new THREE.Vector3(...size).divideScalar(2));
+        const halfExtents = Utils.tToC().vector3(new THREE.Vector3(...scale).divideScalar(2));
         const body = new CANNON.Body({
             mass,
             position: new CANNON.Vec3(...position),
@@ -59,6 +59,7 @@ export class EntityManager {
         mass = 1,
         position = [0, 0, 0],
         degree = [0, 0, 0],
+        scale = [1, 1, 1],
     }: AddModelOption) {
         const body = new CANNON.Body({
             mass,
@@ -66,8 +67,9 @@ export class EntityManager {
             quaternion: new CANNON.Quaternion().setFromEuler(...degree.map(n => Math.PI / 180 * n) as [number, number, number]),
         });
         const entity = new Entity(model.group, body);
-        
+
         model.group.position.copy(new THREE.Vector3(...position));
+        model.group.scale.copy(new THREE.Vector3(...scale));
 
         model.group.traverse(child => {
             const { userData, position, quaternion } = child;
@@ -77,7 +79,7 @@ export class EntityManager {
                     const size = new THREE.Vector3();
                     box3.getSize(size);
                     body.addShape(
-                        new CANNON.Box(Utils.tToC().vector3(size.divideScalar(2))), 
+                        new CANNON.Box(Utils.tToC().vector3(size.divideScalar(2))),
                         Utils.tToC().vector3(position),
                         Utils.tToC().quaternion(quaternion),
                     );

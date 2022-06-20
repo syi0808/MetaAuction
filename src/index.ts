@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
 import { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
-import { Helper } from './helper';
 import { Paths } from './libs/paths';
 import { LoadManager } from './loadManager';
 import { PhysicsManager } from './physcisManager';
@@ -14,11 +13,12 @@ import { CameraManager } from './cameraManager';
 import { MapManager } from './mapManager';
 import { ShaderManager } from './shaderManager';
 import { PageEnum, UIManager } from './uiManager';
+import { PortalManager } from './portalManager';
+import { RaycasterManager } from './RaycasterManager';
 import { Entity } from './entityManager/entity';
 import { ExhibitModel } from './modelManager/exhibit';
 import { TextTexture } from './libs/textures/text';
 import { LedModel } from './modelManager/led';
-import { PortalManager } from './portalManager';
 import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib';
 import 'regenerator-runtime/runtime';
 
@@ -36,6 +36,7 @@ class Main {
     shaderManager: ShaderManager;
     uiManager: UIManager;
     portalManager: PortalManager;
+    raycasterManager: RaycasterManager;
     clock: THREE.Clock;
     lastTime: number;
 
@@ -56,15 +57,16 @@ class Main {
 
         this.scene = new THREE.Scene();
         this.physicsManager = new PhysicsManager();
-        this.mouseManager = new MouseManager();
+        this.mouseManager = new MouseManager(this.renderer.domElement);
         this.loadManager = new LoadManager(2);
-        this.uiManager = new UIManager(this.renderer.domElement);
         this.playerManager = new PlayerManager(new Entity(new THREE.Object3D(), new CANNON.Body()), this.loadManager);
         this.entityManager = new EntityManager(this.scene, this.physicsManager.world);
+        this.uiManager = new UIManager(this.renderer.domElement, this.entityManager);
         this.cameraManager = new CameraManager(this.camera, this.playerManager);
         this.portalManager = new PortalManager(this.playerManager);
         this.mapManager = new MapManager(this.scene, this.entityManager, this.portalManager);
         this.shaderManager = new ShaderManager(this.renderer, this.scene, this.camera);
+        this.raycasterManager = new RaycasterManager(this.camera, this.scene);
 
         window.addEventListener("resize", this.resize.bind(this));
 
@@ -77,14 +79,20 @@ class Main {
         this.renderer.shadowMap.enabled = true;
         this.renderer.outputEncoding = THREE.sRGBEncoding;
 
-        // this.entityManager.addModel(new ExhibitModel({
-        //     title: "가지",
-        //     type: "image",
-        //     url: "",
-        //     price: 10000,
-        // }), { mass: 0, position: [0, 1, 3], degree: [0, -90, 0] });
-        // this.entityManager.addModel(new ChairModel(), { mass: 0, position: [0, 1, 0] });
-        // this.entityManager.addObject3D(new THREE.Mesh(new THREE.SphereGeometry(.2), new THREE.MeshToonMaterial()), { mass: .5, type: ShapeType.SPHERE }).cannon.position.y = 3;
+        this.entityManager.addModel(new ChairModel(), { mass: 0, position: [20, 1, 0], scale: [.3, .3, .3] });
+        this.entityManager.addObject3D(new THREE.Mesh(new THREE.SphereGeometry(.2), new THREE.MeshToonMaterial()), { mass: .5, type: ShapeType.SPHERE }).cannon.position.y = 3;
+        
+        const button = new THREE.Mesh(
+            new THREE.BoxGeometry(),
+            new THREE.MeshBasicMaterial({
+                map: new TextTexture({ text: "상품 올리기" }).textrue,
+                transparent: true,
+            }),
+        );
+        button.position.set(20, 2, 9);
+        button.rotateY(Math.PI / 2);
+        this.scene.add(button);
+        this.raycasterManager.addModel(button, () => this.uiManager.initPage(PageEnum.MerchandiseForm));
 
         this.loadManager
             .createFBXLoader()
@@ -92,7 +100,7 @@ class Main {
             .then(models => {
                 const character = models[Paths.character];
                 character.scale.setScalar(.01);
-                this.playerManager.setCharacter(this.entityManager.addCustom(character, { mass: 10, size: [.5, 1.77, .38], position: [0, 5, 0], isModel: true }));
+                this.playerManager.setCharacter(this.entityManager.addCustom(character, { mass: 10, scale: [.5, 1.77, .38], position: [0, 5, 0], isModel: true }));
             });
 
         this.loadManager.addEventListener("load", () => {
@@ -132,6 +140,7 @@ class Main {
         this.physicsManager.animate(delta);
 
         this.portalManager.update();
+        this.raycasterManager.animate(this.uiManager.currentPage);
 
         requestAnimationFrame(this.animate.bind(this));
     }

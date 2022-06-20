@@ -5,7 +5,7 @@ export class ImageTextrue {
 
     constructor(url: string) {
         const loader = new THREE.TextureLoader();
-        loader.setCrossOrigin("anonymous");
+        loader.setCrossOrigin("");
         this.texture = loader.load(url);
     }
 }

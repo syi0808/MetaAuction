@@ -1,5 +1,7 @@
-import { Container, LoadingPage } from "./loadingPage";
+import { Container as LContainer, LoadingPage } from "./loadingPage";
+import { Container as MContainer, FileInput, Input, MerchandiseFormPage, onChange, onDrag, onDrop, onSubmit, Wrapper } from "./merchandiseFormPage";
 import { css } from '@emotion/css';
+import { EntityManager } from "../entityManager";
 
 export enum PageEnum {
     None = 0,
@@ -31,8 +33,9 @@ const PageContainer = css`
 export class UIManager {
     private pages: Pages;
     currentPage: PageEnum;
+    entityManager: EntityManager;
 
-    constructor(canvas: HTMLCanvasElement) {
+    constructor(canvas: HTMLCanvasElement, entityManager: EntityManager) {
         this.pages = {
             [PageEnum.None]: canvas,
             [PageEnum.Loading]: this.createContainer(),
@@ -41,6 +44,7 @@ export class UIManager {
             [PageEnum.MerchandiseForm]: this.createContainer(),
         }
 
+        this.entityManager = entityManager;
         this.currentPage = PageEnum.None;
         this.init();
     }
@@ -51,6 +55,7 @@ export class UIManager {
 
     init() {
         this.initLoadingPage();
+        this.initMerchandiseForm();
 
         this.currentPage = PageEnum.Loading;
         document.body.appendChild(this.pages[PageEnum.Loading]);
@@ -59,8 +64,28 @@ export class UIManager {
 
     initLoadingPage() {
         const page = this.pages[PageEnum.Loading];
-        page.addClassName(Container);
+        page.addClassName(LContainer);
         page.innerHTML = LoadingPage;
+
+        document.body.appendChild(page);
+    }
+
+    initMerchandiseForm() {
+        const page = this.pages[PageEnum.MerchandiseForm];
+        page.addClassName(MContainer);
+        page.innerHTML = MerchandiseFormPage;
+
+        document.body.appendChild(page);
+
+        (document.getElementsByClassName(FileInput)[0] as HTMLDivElement).addEventListener("dragleave", onDrag);
+        (document.getElementsByClassName(FileInput)[0] as HTMLDivElement).addEventListener("dragenter", onDrag);
+        (document.getElementsByClassName(FileInput)[0] as HTMLDivElement).addEventListener("dragover", onDrag);
+        (document.getElementsByClassName(FileInput)[0] as HTMLDivElement).addEventListener("drop", onDrop);
+        (document.getElementsByClassName(Input)[2] as HTMLInputElement).addEventListener("input", onChange);
+        (document.getElementsByClassName(Wrapper)[0] as HTMLFormElement).addEventListener("submit", e => {
+            onSubmit(e, this.entityManager);
+            this.initPage(PageEnum.None);
+        });
     }
 
     updateProgress(percent: number) {
@@ -69,22 +94,20 @@ export class UIManager {
     }
 
     initPage(page: PageEnum) {
-        if(this.currentPage !== PageEnum.None) {
-            this.pages[this.currentPage].style.transform = "translateY(100%)";
-            setTimeout(() => {
-                if(this.currentPage !== PageEnum.None) {
-                    document.body.removeChild(this.pages[this.currentPage]);
-                    this.pages[this.currentPage].style.transform = "";
-                }
-            }, PageTransitionDuration);
-        }
+        const { currentPage } = this;
+        
+        if(currentPage !== PageEnum.None) this.pages[currentPage].style.transform = "translateY(100%)";
+        else document.getElementById("point")!.style.display = "none";
 
         if(page !== PageEnum.None) {
-            this.pages[page].style.transform = "translateY(0)";
+            document.exitPointerLock();
+            this.pages[page].style.transform = "translateY(100%)";
             setTimeout(() => {
-                document.body.appendChild(this.pages[page]);
-                this.pages[page].style.transform = "";
+                this.pages[page].style.transform = "translateY(0)";
             }, PageTransitionDuration);
+        } else {
+            document.body.requestPointerLock();
+            document.getElementById("point")!.style.display = "block";
         }
 
         this.currentPage = page;

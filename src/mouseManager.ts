@@ -1,17 +1,21 @@
 export class MouseManager {
     angleX: number;
     angleY: number;
+    x: number;
+    y: number;
     speed: number;
     isLocked: boolean;
 
-    constructor() {
+    constructor(canvas: HTMLCanvasElement) {
         this.angleX = 0;
         this.angleY = 0;
+        this.x = 0;
+        this.y = 0;
         this.speed = 3;
         this.isLocked = false;
 
         window.addEventListener("mousemove", this.onMousemove.bind(this));
-        window.addEventListener("click", () => document.body.requestPointerLock());
+        canvas.addEventListener("click", () => document.body.requestPointerLock());
         document.addEventListener("pointerlockchange", () => {
             if(document.pointerLockElement) this.isLocked = true;
             else this.isLocked = false;

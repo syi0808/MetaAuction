@@ -2,11 +2,12 @@ import * as THREE from 'three';
 import { Scene } from 'three';
 import { EntityManager } from './entityManager';
 import { MapModel } from './modelManager/map';
-import vertex from './libs/shaders/sky/vertex.glsl';
-import fragment from './libs/shaders/sky/fragment.glsl';
 import { ShowroomModel } from './modelManager/showroom';
 import { PortalManager } from './portalManager';
 import { TextTexture } from './libs/textures/text';
+import vertex from './libs/shaders/sky/vertex.glsl';
+import fragment from './libs/shaders/sky/fragment.glsl';
+import { ExhibitModel } from './modelManager/exhibit';
 
 export class MapManager {
     entityManager: EntityManager;
@@ -30,6 +31,8 @@ export class MapManager {
         this.addPortal(["중고물품 보러가기", "3초간 서있으세요"], [-3, 2, 9], [21, 1, 0]);
 
         this.entityManager.addModel(new ShowroomModel(), { mass: 0, position: [21, 0, 0] });
+
+        this.entityManager.addModel(new ExhibitModel({ price: 10000, title: "안경", type: "image", url: "images/glasses.jpg" }), { mass: 0, position: [25, 1, 5], degree: [0, 90, 0] });
     }
 
     addPortal(text: string | string[], position: [number, number, number], destination: [number, number, number]) {
@@ -60,7 +63,7 @@ export class MapManager {
         light.position.set(...position);
         light.castShadow = true;
 
-        light.shadow.camera = new THREE.OrthographicCamera(-20, 20, 20, -20, 0.5, 1000);
+        light.shadow.camera = new THREE.OrthographicCamera(-30, 30, 30, -30, 0.5, 1000);
         light.shadow.bias = .0001;
 
         light.shadow.mapSize.width = 4096;

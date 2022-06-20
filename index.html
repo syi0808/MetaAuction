@@ -21,9 +21,35 @@
             box-sizing: border-box;
             font-family: 'Noto Sans KR', sans-serif;
         }
+
+        button, input {
+            outline: none;
+        }
+
+        button {
+            border: none;
+            cursor: pointer;
+        }
+
+        h1, h2, h3, h4, h5, p {
+            margin: 0;
+        }
+
+        .center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 3px solid tomato;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <script src="./src/index.ts"></script>
+    <div id="point" class="center"></div>
 </body>
 </html>

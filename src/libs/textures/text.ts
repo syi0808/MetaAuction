@@ -39,8 +39,6 @@ export class TextTexture {
             color,
         };
 
-        document.body.appendChild(this.canvas);
-
         this.init();
     }
 
